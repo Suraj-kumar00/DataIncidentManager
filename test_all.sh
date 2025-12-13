@@ -7,7 +7,7 @@ echo "🚀 DataIncidentManager - Running Test Scenarios"
 echo "================================================"
 echo ""
 
-KESTRA_URL="http://localhost:8080/api/v1/executions/incident_management/alert_ingestion"
+KESTRA_URL="http://localhost:8080/api/v1/executions/webhook/incident_management/alert_ingestion/alert_webhook"
 
 # Color output
 GREEN='\033[0;32m'

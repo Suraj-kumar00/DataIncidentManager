@@ -29,6 +29,9 @@ services:
     # Graceful shutdown period - wait for active tasks to complete
     stop_grace_period: 6m
     command: server standalone
+    # Load base64-encoded secrets from .env_encoded file
+    env_file:
+      - .env_encoded
     volumes:
       - kestra-data:/app/storage
       - /var/run/docker.sock:/var/run/docker.sock

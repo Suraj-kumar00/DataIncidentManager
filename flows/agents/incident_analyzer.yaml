@@ -36,7 +36,12 @@ tasks:
       }
       
       print(f"✓ Gathered Snowflake context")
-      print(json.dumps(context))
+      
+      # Write output for AI Agent
+      with open('snowflake_context.json', 'w') as f:
+          json.dump(context, f)
+    outputFiles:
+      - snowflake_context.json
 
   # Step 2: Gather context from Airflow (simulated)
   - id: gather_airflow_context
@@ -59,7 +64,12 @@ tasks:
       }
       
       print(f"✓ Gathered Airflow context")
-      print(json.dumps(context))
+      
+      # Write output for AI Agent
+      with open('airflow_context.json', 'w') as f:
+          json.dump(context, f)
+    outputFiles:
+      - airflow_context.json
 
   # Step 3: Gather business context
   - id: gather_business_context
@@ -82,7 +92,12 @@ tasks:
       }
       
       print(f"✓ Gathered business context")
-      print(json.dumps(context))
+      
+      # Write output for AI Agent
+      with open('business_context.json', 'w') as f:
+          json.dump(context, f)
+    outputFiles:
+      - business_context.json
 
   # Step 4: AI Agent analyzes all context and makes decision
   # Using Kestra's official AIAgent plugin with Gemini provider
@@ -127,13 +142,13 @@ tasks:
       {{ inputs.alert_data }}
       
       SNOWFLAKE CONTEXT:
-      {{ outputs.gather_snowflake_context.output }}
+      {{ read(outputs.gather_snowflake_context.outputFiles['snowflake_context.json']) }}
       
       AIRFLOW CONTEXT:
-      {{ outputs.gather_airflow_context.output }}
+      {{ read(outputs.gather_airflow_context.outputFiles['airflow_context.json']) }}
       
       BUSINESS CONTEXT:
-      {{ outputs.gather_business_context.output }}
+      {{ read(outputs.gather_business_context.outputFiles['business_context.json']) }}
       
       Based on all this information:
       1. Is this a REAL incident or FALSE POSITIVE?
@@ -207,12 +222,16 @@ tasks:
       print(f"  Confidence: {decision['confidence']:.0%}")
       print(f"  Reasoning: {decision['reasoning']}")
       
-      print(json.dumps(decision))
+      # Write output for routing task
+      with open('decision.json', 'w') as f:
+          json.dump(decision, f)
+    outputFiles:
+      - decision.json
 
   # Step 6: Route based on AI decision
   - id: route_decision
     type: io.kestra.plugin.core.flow.Switch
-    value: "{{ json(outputs.parse_decision.output).recommended_action }}"
+    value: "{{ json(read(outputs.parse_decision.outputFiles['decision.json'])).recommended_action }}"
     cases:
       notify_team:
         - id: trigger_notification
@@ -220,7 +239,7 @@ tasks:
           namespace: incident_management
           flowId: notify_slack
           inputs:
-            analysis: "{{ outputs.parse_decision.output }}"
+            analysis: "{{ read(outputs.parse_decision.outputFiles['decision.json']) }}"
             incident_id: "{{ inputs.incident_id }}"
           wait: true
       
@@ -230,7 +249,7 @@ tasks:
           namespace: incident_management
           flowId: auto_remediate
           inputs:
-            analysis: "{{ outputs.parse_decision.output }}"
+            analysis: "{{ read(outputs.parse_decision.outputFiles['decision.json']) }}"
             incident_id: "{{ inputs.incident_id }}"
           wait: true
       

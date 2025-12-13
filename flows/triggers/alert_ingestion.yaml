@@ -2,10 +2,12 @@ id: alert_ingestion
 namespace: incident_management
 description: "Webhook endpoint to receive alerts from monitoring systems"
 
-inputs:
-  - id: alert_json
-    type: STRING
-    description: "Raw alert JSON payload"
+# Webhook trigger to receive HTTP POST requests
+triggers:
+  - id: webhook_trigger
+    type: io.kestra.plugin.core.trigger.Webhook
+    key: alert_webhook
+
 
 tasks:
   # Step 1: Parse incoming alert
@@ -17,8 +19,8 @@ tasks:
       import json
       import sys
       
-      # Get alert from input
-      alert_raw = """{{ inputs.alert_json }}"""
+      # Get alert from webhook trigger body
+      alert_raw = """{{ trigger.body }}"""
       
       try:
           alert = json.loads(alert_raw)
@@ -43,6 +45,12 @@ tasks:
       
       # Output for next task
       print(json.dumps(standardized))
+      
+      # Write output to file for next task
+      with open('output.json', 'w') as f:
+          json.dump(standardized, f)
+    outputFiles:
+      - output.json
 
   # Step 2: Enrich alert with context
   - id: enrich_alert
@@ -53,8 +61,9 @@ tasks:
       import json
       from datetime import datetime, timedelta
       
-      # Get parsed alert (Kestra automatically makes previous task output available)
-      parsed = json.loads("""{{ outputs.parse_alert.output }}""")
+      # Read parsed alert from previous task's output file
+      with open('{{outputs.parse_alert.outputFiles["output.json"]}}', 'r') as f:
+          parsed = json.load(f)
       
       # Simulate enrichment with historical context
       # In production, this would query databases
@@ -74,7 +83,13 @@ tasks:
       print(f"  Similar alerts in last 24h: {enriched['enrichment']['similar_alerts_last_24h']}")
       print(f"  Avg resolution time: {enriched['enrichment']['average_resolution_time_minutes']} min")
       
+      # Write output for next task
+      with open('enriched.json', 'w') as f:
+          json.dump(enriched, f)
+      
       print(json.dumps(enriched))
+    outputFiles:
+      - enriched.json
 
   # Step 3: Forward to AI analyzer
   - id: forward_to_analyzer
@@ -82,7 +97,7 @@ tasks:
     namespace: incident_management
     flowId: incident_analyzer
     inputs:
-      alert_data: "{{ outputs.enrich_alert.output }}"
+      alert_data: "{{ read(outputs.enrich_alert.outputFiles['enriched.json']) }}"
       incident_id: "{{ execution.id }}"
     wait: true
     transmitFailed: true

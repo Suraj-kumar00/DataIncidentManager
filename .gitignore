@@ -52,3 +52,5 @@ temp/
 KESTRA_AI_AGENT_UPDATE.md
 SETUP.md
 Docs/
+
+.env_encoded
