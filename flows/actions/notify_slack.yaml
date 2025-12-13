@@ -1,0 +1,66 @@
+id: notify_slack
+namespace: incident_management
+description: "Send incident notification to Slack channel"
+
+inputs:
+  - id: analysis
+    type: STRING
+    description: "AI analysis output JSON"
+  
+  - id: incident_id
+    type: STRING
+    description: "Incident ID"
+
+tasks:
+  # Step 1: Format Slack message
+  - id: format_slack_message
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      
+      analysis = json.loads("""{{ inputs.analysis }}""")
+      incident_id = """{{ inputs.incident_id }}"""
+      
+      # Create rich Slack message
+      severity_emoji = {
+          "CRITICAL": "🔴",
+          "HIGH": "🟠",
+          "MEDIUM": "🟡",
+          "LOW": "🟢"
+      }
+      
+      emoji = severity_emoji.get(analysis['severity'], "⚠️")
+      
+      # Build message (avoiding f-string YAML conflicts)
+      message = emoji + " *DATA INCIDENT ALERT* " + emoji + "\n\n"
+      message += "*Severity:* " + analysis['severity'] + "\n"
+      message += "*Confidence:* " + str(int(analysis['confidence']*100)) + "%\n\n"
+      message += "*What Happened:*\n" + analysis['root_cause'] + "\n\n"
+      message += "*Business Impact:*\n" + analysis['business_impact'] + "\n"
+      message += "Affected systems/users: " + str(analysis.get('affected_count', 'N/A')) + "\n\n"
+      message += "*Recommended Action:*\n" + analysis['recommended_action'].upper().replace('_', ' ') + "\n\n"
+      message += "*AI Reasoning:*\n" + analysis['reasoning'] + "\n\n"
+      message += "*Incident ID:* `" + incident_id + "`\n\n"
+      message += "---\n_Automated analysis by DataIncidentManager AI Agent_"
+      
+      print("✓ Formatted Slack message")
+      print(message)
+      
+      # Return as JSON for Slack webhook
+      slack_payload = {
+          "text": message,
+          "username": "DataIncidentManager Bot",
+          "icon_emoji": ":robot_face:"
+      }
+      
+      print(json.dumps(slack_payload))
+
+  # Step 2: Send to Slack
+  - id: send_to_slack
+    type: io.kestra.plugin.fs.http.Request
+    uri: "{{ secret('SLACK_WEBHOOK_URL') }}"
+    method: POST
+    contentType: application/json
+    body: "{{ outputs.format_slack_message.output }}"

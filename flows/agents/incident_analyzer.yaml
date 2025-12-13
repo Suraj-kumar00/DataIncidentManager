@@ -1,0 +1,253 @@
+id: incident_analyzer
+namespace: incident_management
+description: "AI Agent analyzes incidents and makes autonomous decisions"
+
+inputs:
+  - id: alert_data
+    type: STRING
+    description: "Enriched alert data from ingestion flow"
+  
+  - id: incident_id
+    type: STRING
+    description: "Unique incident identifier"
+
+tasks:
+  # Step 1: Gather context from Snowflake (simulated)
+  - id: gather_snowflake_context
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      from datetime import datetime
+      
+      alert = json.loads("""{{ inputs.alert_data }}""")
+      
+      # Simulate Snowflake API call
+      # In production: would query actual Snowflake metadata API
+      context = {
+          "system": "snowflake",
+          "tables_affected": ["customer_events", "customer_analytics"],
+          "last_schema_change": datetime.now().isoformat(),
+          "data_latency_minutes": 120,
+          "rows_updated_today": 5400000,
+          "is_critical_for_reporting": True,
+          "query_performance": "degraded"
+      }
+      
+      print(f"✓ Gathered Snowflake context")
+      print(json.dumps(context))
+
+  # Step 2: Gather context from Airflow (simulated)
+  - id: gather_airflow_context
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      from datetime import datetime
+      
+      # Simulate Airflow API call
+      context = {
+          "system": "airflow",
+          "dags_affected": ["daily_elt", "hourly_refresh"],
+          "dag_failures_last_24h": 0,
+          "last_successful_run": datetime.now().isoformat(),
+          "expected_next_run": datetime.now().isoformat(),
+          "is_currently_running": False,
+          "recent_errors": []
+      }
+      
+      print(f"✓ Gathered Airflow context")
+      print(json.dumps(context))
+
+  # Step 3: Gather business context
+  - id: gather_business_context
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      from datetime import datetime
+      
+      # Simulate business/SLA context
+      context = {
+          "system": "business",
+          "sla_refresh_time": "2 hours",
+          "customers_affected": 45,
+          "revenue_impact_per_hour": 2800,
+          "critical_reports_using_data": ["executive_dashboard", "nps_metrics"],
+          "business_hours": True,
+          "on_call_engineer": "data-team"
+      }
+      
+      print(f"✓ Gathered business context")
+      print(json.dumps(context))
+
+  # Step 4: AI Agent analyzes all context and makes decision
+  # Using Kestra's official AIAgent plugin with Gemini provider
+  - id: analyze_with_ai_agent
+    type: io.kestra.plugin.ai.agent.AIAgent
+    
+    # Configure Gemini as the AI provider
+    provider:
+      type: io.kestra.plugin.ai.provider.GoogleGemini
+      apiKey: "{{ secret('GEMINI_API_KEY') }}"
+      modelName: gemini-2.5-flash  # Latest Gemini model (June 2025)
+    
+    # System prompt defines the agent's role and behavior
+    systemMessage: |
+      You are an expert data incident responder with deep knowledge of data platforms.
+      
+      Your job is to:
+      1. Analyze data platform incidents across multiple systems
+      2. Determine if this is a REAL incident or FALSE POSITIVE
+      3. Assess SEVERITY (CRITICAL/HIGH/MEDIUM/LOW)
+      4. Identify ROOT CAUSE
+      5. Assess BUSINESS IMPACT
+      6. Recommend ACTION (dismiss/log_only/notify_team/auto_fix)
+      
+      Always respond with ONLY valid JSON in this exact format:
+      {
+        "is_incident": true or false,
+        "severity": "CRITICAL" or "HIGH" or "MEDIUM" or "LOW",
+        "root_cause": "clear technical explanation",
+        "business_impact": "description of business impact",
+        "affected_count": number of affected systems/users,
+        "recommended_action": "dismiss" or "log_only" or "notify_team" or "auto_fix",
+        "confidence": 0.0 to 1.0,
+        "reasoning": "brief explanation of your decision"
+      }
+    
+    # User prompt with all the context
+    prompt: |
+      Analyze this incident:
+      
+      ALERT:
+      {{ inputs.alert_data }}
+      
+      SNOWFLAKE CONTEXT:
+      {{ outputs.gather_snowflake_context.output }}
+      
+      AIRFLOW CONTEXT:
+      {{ outputs.gather_airflow_context.output }}
+      
+      BUSINESS CONTEXT:
+      {{ outputs.gather_business_context.output }}
+      
+      Based on all this information:
+      1. Is this a REAL incident or FALSE POSITIVE?
+      2. How CRITICAL is it (considering business impact)?
+      3. What is the ROOT CAUSE?
+      4. What ACTION should we take?
+    
+    # Structured JSON response with logging
+    configuration:
+      logRequests: true   # Log AI requests for debugging
+      logResponses: true  # Log AI responses for visibility
+      responseFormat:
+        type: JSON
+        jsonSchema:
+          type: object
+          required: ["is_incident", "severity", "root_cause", "recommended_action", "confidence"]
+          properties:
+            is_incident:
+              type: boolean
+            severity:
+              type: string
+              enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+            root_cause:
+              type: string
+            business_impact:
+              type: string
+            affected_count:
+              type: integer
+            recommended_action:
+              type: string
+              enum: ["dismiss", "log_only", "notify_team", "auto_fix"]
+            confidence:
+              type: number
+              minimum: 0.0
+              maximum: 1.0
+            reasoning:
+              type: string
+
+  # Step 5: Parse AI decision
+  - id: parse_decision
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      import re
+      
+      # Get AIAgent output (Kestra AIAgent plugin returns 'output' field)
+      ai_output = """{{ outputs.analyze_with_ai_agent.output }}"""
+      
+      print("AI Agent Raw Output:")
+      print(ai_output)
+      print("\n" + "="*50 + "\n")
+      
+      try:
+          # Try direct JSON parse first
+          decision = json.loads(ai_output)
+      except json.JSONDecodeError:
+          # If wrapped in markdown or has extra text, extract JSON
+          json_match = re.search(r'\{.*\}', ai_output, re.DOTALL)
+          if json_match:
+              decision = json.loads(json_match.group())
+          else:
+              raise ValueError("Could not parse AI output as JSON")
+      
+      print("✓ AI Decision Made:")
+      print(f"  Is Incident: {decision['is_incident']}")
+      print(f"  Severity: {decision['severity']}")
+      print(f"  Root Cause: {decision['root_cause']}")
+      print(f"  Recommended Action: {decision['recommended_action']}")
+      print(f"  Confidence: {decision['confidence']:.0%}")
+      print(f"  Reasoning: {decision['reasoning']}")
+      
+      print(json.dumps(decision))
+
+  # Step 6: Route based on AI decision
+  - id: route_decision
+    type: io.kestra.plugin.core.flow.Switch
+    value: "{{ json(outputs.parse_decision.output).recommended_action }}"
+    cases:
+      notify_team:
+        - id: trigger_notification
+          type: io.kestra.plugin.core.flow.Subflow
+          namespace: incident_management
+          flowId: notify_slack
+          inputs:
+            analysis: "{{ outputs.parse_decision.output }}"
+            incident_id: "{{ inputs.incident_id }}"
+          wait: true
+      
+      auto_fix:
+        - id: trigger_auto_fix
+          type: io.kestra.plugin.core.flow.Subflow
+          namespace: incident_management
+          flowId: auto_remediate
+          inputs:
+            analysis: "{{ outputs.parse_decision.output }}"
+            incident_id: "{{ inputs.incident_id }}"
+          wait: true
+      
+      log_only:
+        - id: log_incident
+          type: io.kestra.plugin.scripts.python.Script
+          docker:
+            image: python:3.11-slim
+          script: |
+            print("✓ Incident logged but not escalated (low priority)")
+            print("  This will be tracked in incident database for patterns")
+      
+      dismiss:
+        - id: dismiss_incident
+          type: io.kestra.plugin.scripts.python.Script
+          docker:
+            image: python:3.11-slim
+          script: |
+            print("✓ Incident dismissed as FALSE POSITIVE")
+            print("  AI Agent identified this as noise, filtering it out")

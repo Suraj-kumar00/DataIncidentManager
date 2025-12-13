@@ -1,0 +1,23 @@
+{
+    "alert_id": "ALERT-SCHEMA-001",
+    "timestamp": "2025-12-13T23:00:00Z",
+    "source": "datadog",
+    "title": "Schema change detected in customer_events table",
+    "severity": "high",
+    "description": "Snowflake table column count mismatch detected by monitoring",
+    "metric": {
+        "table": "prod.analytics.customer_events",
+        "columns_before": 45,
+        "columns_after": 44,
+        "column_removed": "legacy_field"
+    },
+    "related_context": {
+        "last_modified_by": "dbt-bot",
+        "last_modified_time": "2025-12-13T22:45:00Z",
+        "downstream_tables": [
+            "customer_analytics",
+            "campaign_metrics",
+            "user_segments"
+        ]
+    }
+}

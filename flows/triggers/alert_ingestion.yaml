@@ -1,0 +1,88 @@
+id: alert_ingestion
+namespace: incident_management
+description: "Webhook endpoint to receive alerts from monitoring systems"
+
+inputs:
+  - id: alert_json
+    type: STRING
+    description: "Raw alert JSON payload"
+
+tasks:
+  # Step 1: Parse incoming alert
+  - id: parse_alert
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      import sys
+      
+      # Get alert from input
+      alert_raw = """{{ inputs.alert_json }}"""
+      
+      try:
+          alert = json.loads(alert_raw)
+      except json.JSONDecodeError as e:
+          print(f"Error parsing JSON: {e}")
+          sys.exit(1)
+      
+      # Standardize alert format across different sources
+      standardized = {
+          "alert_id": alert.get("alert_id", alert.get("id", "unknown")),
+          "title": alert.get("title", alert.get("message", "No title")),
+          "severity": alert.get("severity", "medium").lower(),
+          "source": alert.get("source", "unknown"),
+          "timestamp": alert.get("timestamp", ""),
+          "description": alert.get("description", alert.get("details", "")),
+          "raw_data": alert
+      }
+      
+      print(f"✓ Parsed alert: {standardized['alert_id']} from {standardized['source']}")
+      print(f"  Title: {standardized['title']}")
+      print(f"  Severity: {standardized['severity']}")
+      
+      # Output for next task
+      print(json.dumps(standardized))
+
+  # Step 2: Enrich alert with context
+  - id: enrich_alert
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      from datetime import datetime, timedelta
+      
+      # Get parsed alert (Kestra automatically makes previous task output available)
+      parsed = json.loads("""{{ outputs.parse_alert.output }}""")
+      
+      # Simulate enrichment with historical context
+      # In production, this would query databases
+      enriched = {
+          **parsed,
+          "enrichment": {
+              "similar_alerts_last_24h": 2,
+              "last_occurrence": (datetime.now() - timedelta(days=1)).isoformat(),
+              "average_resolution_time_minutes": 45,
+              "affected_systems": ["customer_analytics", "campaign_metrics"],
+              "business_hours": True,
+              "is_recurring": False
+          }
+      }
+      
+      print(f"✓ Enriched alert with contextual data")
+      print(f"  Similar alerts in last 24h: {enriched['enrichment']['similar_alerts_last_24h']}")
+      print(f"  Avg resolution time: {enriched['enrichment']['average_resolution_time_minutes']} min")
+      
+      print(json.dumps(enriched))
+
+  # Step 3: Forward to AI analyzer
+  - id: forward_to_analyzer
+    type: io.kestra.plugin.core.flow.Subflow
+    namespace: incident_management
+    flowId: incident_analyzer
+    inputs:
+      alert_data: "{{ outputs.enrich_alert.output }}"
+      incident_id: "{{ execution.id }}"
+    wait: true
+    transmitFailed: true

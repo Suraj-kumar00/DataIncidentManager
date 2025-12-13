@@ -1,0 +1,19 @@
+{
+    "alert_id": "ALERT-MEMORY-001",
+    "timestamp": "2025-12-13T23:05:00Z",
+    "source": "prometheus",
+    "title": "Memory usage spike on worker-3",
+    "severity": "medium",
+    "description": "Memory utilization at 85% on data processing worker",
+    "metric": {
+        "node": "worker-3",
+        "memory_percent": 85,
+        "type": "normal_processing",
+        "duration_minutes": 15
+    },
+    "related_context": {
+        "pattern": "occurs_every_tuesday_4pm",
+        "historical_avg": 82,
+        "customer_impact": "none"
+    }
+}

@@ -1,0 +1,123 @@
+id: auto_remediate
+namespace: incident_management
+description: "Attempt automatic incident remediation"
+
+inputs:
+  - id: analysis
+    type: STRING
+    description: "AI analysis output JSON"
+  
+  - id: incident_id
+    type: STRING
+    description: "Incident ID"
+
+tasks:
+  # Step 1: Determine fix type
+  - id: check_fix_type
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:3.11-slim
+    script: |
+      import json
+      
+      analysis = json.loads("""{{ inputs.analysis }}""")
+      root_cause = analysis['root_cause'].lower()
+      
+      print(f"Root cause: {root_cause}")
+      
+      # Determine fix type based on root cause keywords
+      if "dag" in root_cause or "airflow" in root_cause:
+          fix_type = "restart_dag"
+          print("→ Fix type: Restart Airflow DAG")
+      elif "schema" in root_cause or "drift" in root_cause:
+          fix_type = "backfill_data"
+          print("→ Fix type: Trigger data backfill")
+      elif "stuck" in root_cause or "lock" in root_cause:
+          fix_type = "clear_lock"
+          print("→ Fix type: Clear workflow lock")
+      else:
+          fix_type = "manual_investigation"
+          print("→ Fix type: Requires manual investigation")
+      
+      result = {"fix_type": fix_type}
+      print(json.dumps(result))
+
+  # Step 2: Execute fix
+  - id: execute_fix
+    type: io.kestra.plugin.core.flow.Switch
+    value: "{{ json(outputs.check_fix_type.output).fix_type }}"
+    cases:
+      restart_dag:
+        - id: restart_airflow_dag
+          type: io.kestra.plugin.scripts.python.Script
+          docker:
+            image: python:3.11-slim
+          script: |
+            import json
+            
+            print("🔄 Simulating Airflow DAG restart...")
+            print("  In production: POST to Airflow API /api/v1/dags/{dag_id}/dagRuns")
+            print("  ✓ DAG restarted successfully")
+            
+            result = {
+                "action": "restart_dag",
+                "status": "success",
+                "message": "Airflow DAG restarted"
+            }
+            print(json.dumps(result))
+      
+      backfill_data:
+        - id: trigger_backfill
+          type: io.kestra.plugin.scripts.python.Script
+          docker:
+            image: python:3.11-slim
+          script: |
+            import json
+            
+            print("🔄 Simulating data backfill...")
+            print("  In production: Trigger dbt run for affected models")
+            print("  ✓ Backfill job queued")
+            
+            result = {
+                "action": "backfill_data",
+                "status": "success",
+                "message": "Data backfill initiated"
+            }
+            print(json.dumps(result))
+      
+      clear_lock:
+        - id: clear_workflow_lock
+          type: io.kestra.plugin.scripts.python.Script
+          docker:
+            image: python:3.11-slim
+          script: |
+            import json
+            
+            print("🔓 Simulating workflow lock clear...")
+            print("  In production: Clear distributed lock in Redis/etc")
+            print("  ✓ Lock cleared")
+            
+            result = {
+                "action": "clear_lock",
+                "status": "success",
+                "message": "Workflow lock released"
+            }
+            print(json.dumps(result))
+      
+      manual_investigation:
+        - id: escalate_manual
+          type: io.kestra.plugin.scripts.python.Script
+          docker:
+            image: python:3.11-slim
+          script: |
+            import json
+            
+            print("⚠️ Manual investigation required")
+            print("  Complex issue - escalated to engineering team")
+            
+            result = {
+                "action": "manual_investigation",
+                "status": "escalated",
+                "message": "Requires manual investigation"
+            }
+            print(json.dumps(result))

@@ -1,0 +1,54 @@
+# .gitignore for DataIncidentManager
+
+# Environment variables (contains secrets)
+.env
+
+# Kestra data
+kestra-data/
+postgres-data/
+
+# Docker volumes
+volumes/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+KESTRA_AI_AGENT_UPDATE.md
+SETUP.md
+Docs/
