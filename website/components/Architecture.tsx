@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 
 export default function Architecture() {
     return (
@@ -22,56 +23,23 @@ export default function Architecture() {
                     </p>
                 </motion.div>
 
-                {/* Architecture diagram */}
+                {/* Architecture diagram - using the SVG image */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8 }}
                     viewport={{ once: true }}
-                    className="bg-gray-800 border-2 border-gray-700 rounded-2xl p-8 mb-12 shadow-lg"
+                    className="bg-gray-800 border-2 border-gray-700 rounded-2xl p-4 md:p-8 mb-12 shadow-lg overflow-hidden"
                 >
-                    <div className="prose prose-invert max-w-none">
-                        <pre className="bg-gray-900 p-6 rounded-lg overflow-x-auto text-sm text-gray-300 border border-gray-700">
-                            {`┌─────────────────────┐
-│ Monitoring Systems  │
-│ (Datadog, Prometheus)│
-└──────────┬──────────┘
-           │ Webhook
-           ▼
-┌─────────────────────┐
-│  Alert Ingestion    │
-│  (Kestra Trigger)   │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│   AI Agent          │
-│ (Perplexity Sonar)  │
-│ - Parse Alert       │
-│ - Gather Context    │
-│ - Analyze Pattern   │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Multi-System Data  │
-│ Snowflake | Airflow │
-│ dbt | Business SLAs │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Decision Engine    │
-│ Dismiss | Log | Fix │
-└──────────┬──────────┘
-           │
-     ┌─────┴─────┐
-     ▼           ▼
-┌─────────┐ ┌──────────────┐
-│  Slack  │ │ Auto-Remediate│
-│ Notify  │ │  Workflows   │
-└─────────┘ └──────────────┘`}
-                        </pre>
+                    <div className="relative w-full">
+                        <Image
+                            src="/images/architecture.svg"
+                            alt="DataIncidentManager Architecture Diagram"
+                            width={1200}
+                            height={800}
+                            className="w-full h-auto rounded-lg"
+                            priority
+                        />
                     </div>
                 </motion.div>
 

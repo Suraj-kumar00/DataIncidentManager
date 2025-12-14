@@ -102,6 +102,12 @@ graph LR
     H -->|Backfill Data| J[Data Pipeline]
 ```
 
+### High-Level Architecture Diagram
+
+<div align="center">
+  <img src="public/Dataincidentmanager-architecture.svg" alt="DataIncidentManager Architecture" width="100%">
+</div>
+
 ### System Components
 
 | Component | Purpose | Technology |
