@@ -51,6 +51,13 @@ Modern data teams face a critical operational challenge with incident management
 - On-call engineers overwhelmed by noise, miss real incidents
 
 ---
+## Demo Video (click to play)
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=Z3Se4ADdxFA" target="_blank">
+    <img src="public/demo-video-thumbnail.png" alt="Watch DataIncidentManager Demo" width="100%">
+  </a>
+</div>
+
 
 ## 💡 Our Solution
 
