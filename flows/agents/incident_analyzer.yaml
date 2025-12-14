@@ -104,12 +104,6 @@ tasks:
   - id: analyze_with_ai_agent
     type: io.kestra.plugin.ai.agent.AIAgent
     
-    # Configure Gemini as the AI provider
-    provider:
-      type: io.kestra.plugin.ai.provider.GoogleGemini
-      apiKey: "{{ secret('GEMINI_API_KEY') }}"
-      modelName: gemini-2.5-flash  # Latest Gemini model (June 2025)
-    
     # System prompt defines the agent's role and behavior
     systemMessage: |
       You are an expert data incident responder with deep knowledge of data platforms.
@@ -156,38 +150,15 @@ tasks:
       3. What is the ROOT CAUSE?
       4. What ACTION should we take?
     
-    # Structured JSON response with logging
-    configuration:
-      logRequests: true   # Log AI requests for debugging
-      logResponses: true  # Log AI responses for visibility
-      responseFormat:
-        type: JSON
-        jsonSchema:
-          type: object
-          required: ["is_incident", "severity", "root_cause", "recommended_action", "confidence"]
-          properties:
-            is_incident:
-              type: boolean
-            severity:
-              type: string
-              enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
-            root_cause:
-              type: string
-            business_impact:
-              type: string
-            affected_count:
-              type: integer
-            recommended_action:
-              type: string
-              enum: ["dismiss", "log_only", "notify_team", "auto_fix"]
-            confidence:
-              type: number
-              minimum: 0.0
-              maximum: 1.0
-            reasoning:
-              type: string
+    # Configure Perplexity Sonar provider (OpenAI-compatible)
+    # Perplexity Pro tier has unlimited Sonar usage
+    provider:
+      type: io.kestra.plugin.ai.provider.OpenAI
+      apiKey: "{{ secret('PERPLEXITY_API_KEY') }}"
+      baseUrl: "https://api.perplexity.ai"
+      modelName: "sonar"
 
-  # Step 5: Parse AI decision
+  # Step 5: Parse AI decision  
   - id: parse_decision
     type: io.kestra.plugin.scripts.python.Script
     docker:
@@ -196,35 +167,46 @@ tasks:
       import json
       import re
       
-      # Get AIAgent output (Kestra AIAgent plugin returns 'output' field)
-      ai_output = """{{ outputs.analyze_with_ai_agent.output }}"""
+      # Per official Kestra example: AIAgent returns textOutput field
+      ai_text = """{{ outputs.analyze_with_ai_agent.textOutput }}"""
       
-      print("AI Agent Raw Output:")
-      print(ai_output)
-      print("\n" + "="*50 + "\n")
+      print("=" * 60)
+      print("AI Agent Decision (from textOutput):")
+      print(ai_text)
+      print("=" * 60)
+      
+      # Strip markdown code blocks if present (```json ... ```)
+      ai_text = ai_text.strip()
+      if ai_text.startswith("```"):
+          # Remove opening ```json or ```
+          ai_text = re.sub(r'^```(?:json)?\s*\n', '', ai_text)
+          # Remove closing ```
+          ai_text = re.sub(r'\n```\s*$', '', ai_text)
+          ai_text = ai_text.strip()
       
       try:
-          # Try direct JSON parse first
-          decision = json.loads(ai_output)
-      except json.JSONDecodeError:
-          # If wrapped in markdown or has extra text, extract JSON
-          json_match = re.search(r'\{.*\}', ai_output, re.DOTALL)
-          if json_match:
-              decision = json.loads(json_match.group())
-          else:
-              raise ValueError("Could not parse AI output as JSON")
+          decision = json.loads(ai_text)
+      except json.JSONDecodeError as e:
+          print(f"ERROR: Failed to parse AI response as JSON: {e}")
+          print(f"Raw text (after markdown strip): {ai_text}")
+          raise
       
-      print("✓ AI Decision Made:")
-      print(f"  Is Incident: {decision['is_incident']}")
-      print(f"  Severity: {decision['severity']}")
-      print(f"  Root Cause: {decision['root_cause']}")
-      print(f"  Recommended Action: {decision['recommended_action']}")
-      print(f"  Confidence: {decision['confidence']:.0%}")
-      print(f"  Reasoning: {decision['reasoning']}")
+      print("\n" + "=" * 60)
+      print("✓ AI Decision Parsed Successfully:")
+      print("=" * 60)
+      print(f"  Is Incident: {decision.get('is_incident', 'N/A')}")
+      print(f"  Severity: {decision.get('severity', 'N/A')}")
+      print(f"  Root Cause: {decision.get('root_cause', 'N/A')[:100]}...")
+      print(f"  Recommended Action: {decision.get('recommended_action', 'N/A')}")
+      print(f"  Confidence: {decision.get('confidence', 0):.0%}")
+      print(f"  Reasoning: {decision.get('reasoning', 'N/A')[:100]}...")
+      print("=" * 60)
       
       # Write output for routing task
       with open('decision.json', 'w') as f:
           json.dump(decision, f)
+      
+      print("\n✓ Decision saved to decision.json")
     outputFiles:
       - decision.json
 

@@ -1,0 +1,184 @@
+{
+    "alert_id": "PROD-DAG-SLA-2025-002",
+    "timestamp": "2025-12-14T15:45:17.234Z",
+    "source": "cloudwatch_production",
+    "severity": "critical",
+    "title": "[CRITICAL] Production ELT Pipeline Exceeded SLA by 3x",
+    "description": "Critical data pipeline running 6 hours vs 2-hour SLA. Multiple downstream systems blocked. Customer-facing reports severely delayed.",
+    "correlated_alerts": [
+        {
+            "alert_id": "SNOWFLAKE-PERF-912",
+            "source": "snowflake_warehouse",
+            "message": "Query execution time degraded by 400% on ANALYTICS_WH",
+            "timestamp": "2025-12-14T13:30:00Z",
+            "severity": "high"
+        },
+        {
+            "alert_id": "AIRFLOW-WORKER-MEM-445",
+            "source": "airflow_monitoring",
+            "message": "Worker memory exhaustion on celery-worker-3 (98% utilization)",
+            "timestamp": "2025-12-14T14:15:00Z",
+            "severity": "medium"
+        },
+        {
+            "alert_id": "TABLEAU-STALE-DATA-789",
+            "source": "tableau_server",
+            "message": "15 published dashboards showing stale data (>4 hours old)",
+            "timestamp": "2025-12-14T15:30:00Z",
+            "severity": "critical"
+        },
+        {
+            "alert_id": "SLACK-USER-COMP-101",
+            "source": "slack_app_mentions",
+            "message": "12 customer support tickets referencing 'dashboard data not updating'",
+            "timestamp": "2025-12-14T15:40:00Z",
+            "severity": "high"
+        }
+    ],
+    "metric": {
+        "dag_id": "daily_elt_pipeline_production",
+        "expected_duration_minutes": 120,
+        "actual_duration_minutes": 360,
+        "current_status": "running",
+        "start_time": "2025-12-14T09:45:00Z",
+        "current_task": "transform_customer_data",
+        "tasks_completed": 47,
+        "tasks_total": 89,
+        "tasks_failed": 0,
+        "tasks_stuck": 3,
+        "executor": "CeleryExecutor",
+        "pool": "default_pool",
+        "pool_slots_used": 24,
+        "pool_slots_available": 32
+    },
+    "performance_context": {
+        "snowflake_warehouse": {
+            "warehouse_name": "ANALYTICS_WH",
+            "size": "X-LARGE",
+            "utilization_percent": 98,
+            "queued_queries": 47,
+            "avg_execution_time_minutes": 23,
+            "historical_avg_execution_minutes": 5.8,
+            "degradation_factor": 3.97,
+            "last_warehouse_resize": "2025-12-01T00:00:00Z",
+            "auto_suspend_enabled": true,
+            "auto_resume_enabled": true
+        },
+        "airflow_workers": {
+            "total_workers": 8,
+            "healthy_workers": 5,
+            "worker_cpu_avg": 87,
+            "worker_memory_avg": 92,
+            "task_queue_length": 156,
+            "failed_task_instances_last_hour": 0,
+            "stuck_task_instances": 3
+        },
+        "recent_schema_changes": true,
+        "data_volume_increase_percent": 340,
+        "rows_processed_today": 1247000000,
+        "historical_avg_rows": 367000000
+    },
+    "business_context": {
+        "criticality_tier": "mission_critical",
+        "owning_team": "data-engineering",
+        "slack_channel": "#prod-data-incidents",
+        "on_call_engineer": "@tom_data_ops",
+        "pagerduty_escalation_policy": "data-platform-critical",
+        "downstream_systems_count": 23,
+        "downstream_systems_blocked": [
+            "executive_reporting",
+            "ml_model_training",
+            "customer_segmentation",
+            "revenue_attribution",
+            "fraud_detection",
+            "inventory_optimization",
+            "marketing_automation",
+            "customer_success_platform",
+            "sales_forecasting",
+            "financial_close_process",
+            "regulatory_reporting",
+            "api_data_products"
+        ],
+        "customer_reports_delayed": [
+            "ceo_daily_metrics",
+            "board_weekly_report",
+            "investor_dashboard",
+            "customer_health_scores",
+            "nps_analytics",
+            "revenue_waterfall"
+        ],
+        "sla_breach_severity": "tier_1_P0",
+        "estimated_customers_affected": 2847,
+        "estimated_revenue_impact_per_hour_usd": 11200,
+        "compliance_risk": true,
+        "regulatory_deadline": "2025-12-15T09:00:00Z",
+        "business_hours": true,
+        "executive_visibility": true
+    },
+    "historical_data": {
+        "dag_success_rate_last_30d": 97.3,
+        "dag_failures_last_7d": 1,
+        "average_duration_minutes_last_30d": 115,
+        "median_duration_minutes": 108,
+        "p90_duration_minutes": 135,
+        "p99_duration_minutes": 178,
+        "last_sla_breach": "2025-11-15T08:30:00Z",
+        "last_breach_reason": "snowflake_warehouse_contention",
+        "last_breach_resolution": "scaled_warehouse_to_2xl",
+        "similar_incidents_last_90d": 3,
+        "pattern_detected": "monthly_end_data_spike",
+        "typical_resolution_time_minutes": 65
+    },
+    "root_cause_indicators": {
+        "likely_causes": [
+            "data_volume_spike_340_percent",
+            "snowflake_warehouse_undersized",
+            "recent_schema_change_causing_query_slowdown",
+            "worker_resource_exhaustion"
+        ],
+        "recent_changes": [
+            {
+                "change_type": "schema_migration",
+                "table": "customer_events",
+                "timestamp": "2025-12-14T09:05:00Z",
+                "impact_likelihood": "high"
+            },
+            {
+                "change_type": "dbt_model_update",
+                "model": "customer_analytics",
+                "timestamp": "2025-12-13T18:00:00Z",
+                "impact_likelihood": "medium"
+            }
+        ],
+        "external_factors": {
+            "black_friday_data_influx": true,
+            "end_of_quarter_reporting": true,
+            "marketing_campaign_surge": true
+        }
+    },
+    "suggested_actions": {
+        "immediate": [
+            "scale_snowflake_warehouse_to_2xl",
+            "restart_stuck_airflow_tasks",
+            "notify_stakeholders_of_delay"
+        ],
+        "short_term": [
+            "enable_airflow_task_parallelism",
+            "optimize_slow_dbt_models",
+            "implement_incremental_processing"
+        ],
+        "long_term": [
+            "implement_auto_warehouse_scaling",
+            "add_performance_monitoring_alerts",
+            "review_etl_architecture_for_scalability"
+        ]
+    },
+    "related_context": {
+        "last_successful_run": "2025-12-13T11:45:00Z",
+        "last_successful_duration_minutes": 118,
+        "next_scheduled_run": "2025-12-15T09:45:00Z",
+        "estimated_time_to_completion": "2025-12-14T18:30:00Z",
+        "manual_intervention_required": true,
+        "runbook_link": "https://wiki.company.com/data/runbooks/dag-performance-degradation"
+    }
+}

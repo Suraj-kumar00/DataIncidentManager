@@ -1,0 +1,121 @@
+{
+    "alert_id": "PROD-SCHEMA-2025-001",
+    "timestamp": "2025-12-14T09:15:23.847Z",
+    "source": "datadog_production",
+    "severity": "high",
+    "title": "[PROD] Schema DDL Detected: customer_events table modified",
+    "description": "Column removal detected in production Snowflake warehouse during business hours. Potential breaking change for downstream consumers.",
+    "correlated_alerts": [
+        {
+            "alert_id": "DBT-TEST-FAIL-847",
+            "source": "dbt_cloud",
+            "message": "3 tests failed on customer_analytics model: referential_integrity, not_null, accepted_values",
+            "timestamp": "2025-12-14T09:16:12Z",
+            "severity": "high"
+        },
+        {
+            "alert_id": "AIRFLOW-DAG-SKIP-291",
+            "source": "airflow_api",
+            "message": "hourly_customer_refresh DAG task skipped (schema validation failed)",
+            "timestamp": "2025-12-14T09:17:45Z",
+            "severity": "medium"
+        },
+        {
+            "alert_id": "LOOKER-QUERY-ERR-503",
+            "source": "looker",
+            "message": "Executive dashboard query failed: column 'legacy_device_id' not found",
+            "timestamp": "2025-12-14T09:18:22Z",
+            "severity": "high"
+        }
+    ],
+    "metric": {
+        "database": "PROD_ANALYTICS",
+        "schema": "PUBLIC",
+        "table": "CUSTOMER_EVENTS",
+        "change_type": "COLUMN_REMOVED",
+        "column_name": "legacy_device_id",
+        "column_type": "VARCHAR(255)",
+        "affected_rows": 547203891,
+        "table_size_gb": 842.3,
+        "partitions_affected": 365,
+        "last_query_time": "2025-12-14T09:14:58Z",
+        "queries_per_day_avg": 1247,
+        "write_ops_per_day": 86400
+    },
+    "business_context": {
+        "criticality_tier": "tier_1_production",
+        "owning_team": "data-platform",
+        "slack_channel": "#data-incidents",
+        "on_call_engineer": "@sarah_data_lead",
+        "dependent_dashboards": [
+            "executive_kpi_dashboard",
+            "customer_360_view",
+            "ml_feature_store",
+            "revenue_attribution",
+            "churn_prediction_model"
+        ],
+        "sla_breach_minutes": 60,
+        "estimated_users_impacted": 847,
+        "revenue_impacting": true,
+        "customer_facing": true,
+        "customer_tier_affected": [
+            "enterprise",
+            "premium"
+        ],
+        "estimated_revenue_impact_per_hour_usd": 5600
+    },
+    "historical_data": {
+        "similar_incidents_last_30d": 2,
+        "similar_incidents_last_90d": 7,
+        "average_resolution_time_minutes": 45,
+        "median_resolution_time_minutes": 38,
+        "last_occurrence": "2025-11-28T14:22:00Z",
+        "was_false_positive_last_time": false,
+        "root_cause_last_time": "dbt migration executed without downstream notification",
+        "resolution_action_last_time": "rolled_back_schema_change",
+        "recurring_pattern": "monthly_release_window",
+        "time_of_day_pattern": "business_hours_utc_9am_to_5pm"
+    },
+    "enrichment": {
+        "git_commit": {
+            "repo": "data-platform/dbt-models",
+            "commit_sha": "a7f3c2d",
+            "author": "dbt-bot",
+            "message": "Remove deprecated legacy_device_id column",
+            "timestamp": "2025-12-14T08:45:00Z",
+            "pr_number": 1247,
+            "approved_by": [
+                "tech_lead",
+                "senior_engineer"
+            ]
+        },
+        "change_window": {
+            "is_approved_window": false,
+            "next_approved_window": "2025-12-17T22:00:00Z",
+            "reason": "Emergency fix deployed outside window"
+        },
+        "runbook_link": "https://wiki.company.com/data/incident-response/schema-drift",
+        "slack_thread": "https://company.slack.com/archives/C123/p1702548923"
+    },
+    "related_context": {
+        "last_modified_by": "dbt-bot",
+        "last_modified_time": "2025-12-14T09:05:00Z",
+        "downstream_tables_count": 17,
+        "downstream_tables_critical": [
+            "customer_analytics",
+            "campaign_metrics",
+            "user_segments",
+            "ml_training_features",
+            "financial_reconciliation"
+        ],
+        "upstream_dependencies": [
+            "raw_events_firehose",
+            "kafka_customer_stream"
+        ],
+        "lineage_depth": 5,
+        "affected_ml_models": [
+            "churn_predictor_v3",
+            "ltv_estimator_v2"
+        ]
+    }
+}

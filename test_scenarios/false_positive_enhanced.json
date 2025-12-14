@@ -1,0 +1,162 @@
+{
+    "alert_id": "ALERT-MEMORY-SPIKE-003",
+    "timestamp": "2025-12-14T16:00:45.123Z",
+    "source": "prometheus_production",
+    "severity": "medium",
+    "title": "[Recurring] Memory spike on data-worker-3 during hourly processing",
+    "description": "Memory utilization at 85% on Airflow worker node. Historical pattern indicates this is expected behavior during batch processing windows.",
+    "correlated_alerts": [
+        {
+            "alert_id": "PROMETHEUS-MEM-447",
+            "source": "prometheus",
+            "message": "Memory usage on data-worker-3: 85.2% (threshold: 80%)",
+            "timestamp": "2025-12-14T16:00:15Z",
+            "severity": "warning"
+        },
+        {
+            "alert_id": "PROMETHEUS-MEM-448",
+            "source": "prometheus",
+            "message": "Memory usage on data-worker-3: 85.8% (threshold: 80%)",
+            "timestamp": "2025-12-14T16:05:15Z",
+            "severity": "warning"
+        }
+    ],
+    "metric": {
+        "node": "data-worker-3",
+        "node_type": "airflow_celery_worker",
+        "memory_used_gb": 27.2,
+        "memory_total_gb": 32.0,
+        "memory_percent": 85.0,
+        "memory_available_gb": 4.8,
+        "swap_used_gb": 0.3,
+        "cpu_percent": 42.0,
+        "processing_type": "normal_hourly_batch",
+        "duration_minutes": 15,
+        "tasks_running": 8,
+        "tasks_pending": 0
+    },
+    "historical_pattern": {
+        "is_recurring": true,
+        "recurrence_pattern": "daily_16:00_utc",
+        "recurrence_days": [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday"
+        ],
+        "occurrences_last_7d": 5,
+        "occurrences_last_30d": 22,
+        "always_between": "16:00-16:30 UTC",
+        "memory_spike_avg_percent": 82.4,
+        "memory_spike_max_percent": 87.1,
+        "memory_spike_min_percent": 78.9,
+        "duration_avg_minutes": 18,
+        "auto_resolves": true,
+        "avg_resolution_time_minutes": 22,
+        "customer_impact_history": "none",
+        "false_positive_rate": 100.0
+    },
+    "business_context": {
+        "criticality_tier": "tier_3_background",
+        "owning_team": "data-infrastructure",
+        "customer_facing": false,
+        "revenue_impacting": false,
+        "compliance_risk": false,
+        "sla_applicable": false,
+        "alerts_same_pattern_last_24h": 1,
+        "alerts_same_pattern_last_7d": 5,
+        "manual_investigations_wasted_last_30d": 8,
+        "estimated_engineering_hours_wasted": 12,
+        "cost_of_alert_fatigue_monthly_usd": 2400
+    },
+    "related_context": {
+        "pattern": "occurs_daily_16:00_utc",
+        "pattern_stable_for_days": 90,
+        "historical_avg_percent": 82.0,
+        "historical_max_percent": 88.5,
+        "threshold_should_be": 90,
+        "customer_impact": "none",
+        "data_pipeline_impact": "none",
+        "services_affected": 0,
+        "tickets_created_historically": 22,
+        "tickets_closed_as_false_positive": 22,
+        "last_real_incident": "never"
+    },
+    "ai_should_recognize": {
+        "is_false_positive": true,
+        "confidence_indicators": [
+            "recurring_daily_pattern_for_90_days",
+            "zero_customer_impact_ever",
+            "zero_service_degradation",
+            "memory_returns_to_normal_within_30_minutes",
+            "no_swap_thrashing",
+            "cpu_normal",
+            "tasks_completing_successfully",
+            "100_percent_auto_resolve_rate"
+        ],
+        "recommended_action": "dismiss_and_adjust_threshold",
+        "threshold_recommendation": {
+            "current_threshold": 80,
+            "recommended_threshold": 88,
+            "reasoning": "p99 historical max is 88.5%, current 80% causes false positives"
+        },
+        "alert_tuning_needed": true
+    },
+    "system_health": {
+        "swap_thrashing": false,
+        "oom_killer_triggered": false,
+        "tasks_failing_due_to_memory": false,
+        "workers_healthy": true,
+        "dag_runs_completing": true,
+        "data_quality_checks_passing": true,
+        "downstream_systems_healthy": true,
+        "query_performance_normal": true
+    },
+    "correlation_analysis": {
+        "time_of_day_correlation": {
+            "correlated_with": "hourly_batch_processing_window",
+            "batch_job": "hourly_customer_data_refresh",
+            "job_start_time": "15:55 UTC",
+            "job_typical_duration_minutes": 25,
+            "memory_spike_starts": "16:00 UTC",
+            "memory_spike_ends": "16:22 UTC"
+        },
+        "workload_correlation": {
+            "correlated_tasks": [
+                "process_customer_events",
+                "aggregate_user_metrics",
+                "build_ml_features"
+            ],
+            "typical_parallelism": 8,
+            "memory_per_task_gb": 3.4,
+            "expected_total_memory_gb": 27.2,
+            "current_memory_gb": 27.2,
+            "memory_leak_detected": false
+        }
+    },
+    "why_this_is_not_an_incident": {
+        "reasons": [
+            "Memory usage is expected for this batch processing window",
+            "No swap usage indicates system is handling load fine",
+            "All tasks completing successfully",
+            "Auto-resolves within 22 minutes every single time",
+            "Zero customer or business impact in 90-day history",
+            "CPU usage is nominal (42%) - not a resource exhaustion issue",
+            "Workers remain healthy and responsive",
+            "Pattern is 100% predictable and benign"
+        ],
+        "proper_action": "Log for monitoring, do not alert on-call",
+        "long_term_fix": "Adjust Prometheus alert threshold to 88% for this specific worker during this time window"
+    },
+    "cost_of_alert_fatigue": {
+        "manual_investigations_last_30d": 8,
+        "avg_investigation_time_minutes": 15,
+        "total_time_wasted_hours": 2.0,
+        "engineer_hourly_rate_usd": 120,
+        "monthly_cost_usd": 240,
+        "annual_cost_if_not_fixed_usd": 2880,
+        "on_call_fatigue_risk": "high",
+        "real_alerts_potentially_missed": "likely"
+    }
+}

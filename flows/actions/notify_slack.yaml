@@ -56,11 +56,19 @@ tasks:
       }
       
       print(json.dumps(slack_payload))
+      
+      # Write to file so next task can access it
+      with open('slack_message.json', 'w') as f:
+          json.dump(slack_payload, f)
+      
+      print("✓ Slack payload saved")
+    outputFiles:
+      - slack_message.json
 
   # Step 2: Send to Slack
   - id: send_to_slack
-    type: io.kestra.plugin.fs.http.Request
+    type: io.kestra.plugin.core.http.Request
     uri: "{{ secret('SLACK_WEBHOOK_URL') }}"
     method: POST
     contentType: application/json
-    body: "{{ outputs.format_slack_message.output }}"
+    body: "{{ read(outputs.format_slack_message.outputFiles['slack_message.json']) }}"

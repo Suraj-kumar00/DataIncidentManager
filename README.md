@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Built with Kestra](https://img.shields.io/badge/Built%20with-Kestra-blue)](https://kestra.io)
-[![AI Agent](https://img.shields.io/badge/Powered%20by-Google%20Gemini-orange)](https://ai.google.dev)
+[![AI Agent](https://img.shields.io/badge/Powered%20by-Perplexity%20Sonar-purple)](https://www.perplexity.ai)
 
 ---
 
@@ -70,7 +70,7 @@ Modern data teams face a critical operational challenge with incident management
 
 ## ✨ Key Features
 
-- 🤖 **AI-Powered Analysis**: Uses Google Gemini to intelligently analyze incidents
+- 🤖 **AI-Powered Analysis**: Uses Perplexity Sonar AI (unlimited free tier) to intelligently analyze incidents
 - 🔄 **Multi-System Context**: Automatically gathers data from Snowflake, Airflow, dbt, and more
 - ⚡ **Real-Time Response**: 30-second end-to-end response time
 - 🎯 **Smart Routing**: Dismiss false positives, log minor issues, notify teams, or auto-remediate
@@ -113,7 +113,7 @@ graph LR
 ### Prerequisites
 
 - [Docker](https://www.docker.com/products/docker-desktop) & Docker Compose
-- [Google Gemini API Key](https://makersuite.google.com/app/apikey) (FREE tier available)
+- [Perplexity API Key](https://www.perplexity.ai/account/api/keys) (FREE tier: unlimited Sonar usage)
 - Slack Webhook URL (optional, for notifications)
 
 ### Installation
@@ -125,15 +125,20 @@ cd DataIncidentManager
 
 # 2. Configure environment variables
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY and SLACK_WEBHOOK_URL
+# Edit .env and add:
+#   PERPLEXITY_API_KEY=your_api_key_here
+#   SLACK_WEBHOOK_URL=your_webhook_url_here
 
-# 3. Start Kestra with Docker Compose
+# 3. Encode secrets (required for Kestra)
+./encode_secrets.sh
+
+# 4. Start Kestra with Docker Compose
 docker-compose up -d
 
-# 4. Verify Kestra is running
+# 5. Verify Kestra is running
 docker ps  # Both containers should be "Up"
 
-# 5. Access Kestra UI
+# 6. Access Kestra UI
 open http://localhost:8080
 ```
 
@@ -152,70 +157,114 @@ Deploy the 4 flows via Kestra UI:
 
 ### Configure Secrets
 
-1. In Kestra UI, go to **Secrets** (lock icon in sidebar)
-2. Add **GEMINI_API_KEY**: Your Google Gemini API key
-3. Add **SLACK_WEBHOOK_URL**: Your Slack webhook (or use dummy URL for testing)
+Secrets are automatically configured via `.env_encoded` file created by `encode_secrets.sh`.
+
+To verify or update secrets:
+1. Edit `.env` file with your API keys
+2. Run `./encode_secrets.sh` to re-encode
+3. Restart Kestra: `docker-compose restart`
 
 ### Test the System
 
 ```bash
-# Run automated test scenarios
+# Run basic test scenarios (simple alerts)
 ./test_all.sh
 
-# Or test individual scenarios
-curl -X POST http://localhost:8080/api/v1/executions/incident_management/alert_ingestion \
-  -H "Content-Type: application/json" \
-  -d @test_scenarios/schema_drift.json
+# Run enhanced test scenarios (production-grade, recommended for demo)
+./test_all_enhanced.sh
 ```
 
-View executions: http://localhost:8080/executions
+**View Results:**
+- Kestra Executions: http://localhost:8080/executions
+- Slack Channel: Check for AI-generated incident alerts
 
-For detailed setup instructions, see [SETUP.md](SETUP.md)
+For detailed setup instructions, see [PERPLEXITY_SETUP.md](PERPLEXITY_SETUP.md)
 
 ---
 
 ## 🎬 Demo Scenarios
 
-Three pre-built test scenarios demonstrate the system's capabilities:
+Six pre-built test scenarios demonstrate the system's capabilities:
 
-### 1. Schema Drift Detection (HIGH Severity)
+### Basic Scenarios (Simple Demo)
 
-**Scenario**: dbt model changes break downstream tables
-
-```bash
-curl -X POST http://localhost:8080/api/v1/executions/incident_management/alert_ingestion \
-  -H "Content-Type: application/json" \
-  -d @test_scenarios/schema_drift.json
-```
-
+#### 1. Schema Drift Detection (HIGH Severity)
+**Scenario**: dbt model changes break downstream tables  
 **AI Decision**: HIGH severity → Notify team via Slack  
 **MTTR**: ~25 seconds
 
-### 2. False Positive Filtering (Dismissed)
-
-**Scenario**: Temporary memory spike during batch processing
-
 ```bash
-curl -X POST http://localhost:8080/api/v1/executions/incident_management/alert_ingestion \
-  -H "Content-Type: application/json" \
-  -d @test_scenarios/false_positive.json
+# Use the automated script
+./test_all.sh
 ```
 
-**AI Decision**: False positive → Dismiss, log only  
-**Prevented**: Unnecessary alert fatigue
+### Enhanced Scenarios (Production-Grade Demo) ⭐ **Recommended**
 
-### 3. Automated Remediation (CRITICAL)
+These scenarios demonstrate **multi-system correlation, business context awareness, and intelligent pattern recognition**:
 
-**Scenario**: Airflow DAG timeout impacting revenue reporting
+#### 1. Schema Drift with Multi-System Impact (CRITICAL)
+
+**What AI Sees:**
+- 4 correlated alerts (Datadog, dbt Cloud, Airflow, Looker)
+- Git commit details (PR #1247 by dbt-bot)
+- Business impact: 847 enterprise customers, $5,600/hour
+- 17 downstream tables affected including ML models
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/executions/incident_management/alert_ingestion \
-  -H "Content-Type: application/json" \
-  -d @test_scenarios/dag_timeout.json
+./test_all_enhanced.sh  # Runs all 3 enhanced scenarios
 ```
 
-**AI Decision**: CRITICAL severity → Auto-restart DAG  
-**MTTR**: ~30 seconds (vs 4 hours manual)
+**AI Analysis Output:**
+```
+🔴 CRITICAL DATA INCIDENT ALERT
+
+What: dbt-bot executed Git-approved schema migration 
+      (PR #1247) removing 'legacy_device_id' column outside 
+      approved change window, causing test failures, DAG skips, 
+      and dashboard errors.
+
+Impact: 847 customers affected, $5,600/hour revenue impact,
+        executive dashboards broken, ML models impacted
+        
+Recommended: NOTIFY TEAM
+```
+
+#### 2. DAG Timeout with Performance Degradation (CRITICAL)
+
+**What AI Sees:**
+- 4 correlated alerts (Snowflake, Airflow, Tableau, Slack tickets)
+- 98% warehouse utilization, 47 queued queries
+- 340% data volume spike vs historical average
+- 2847 customers affected, regulatory deadline at risk
+
+**AI identifies root cause:** Warehouse undersized + data spike + recent schema change
+
+#### 3. False Positive - Recurring Pattern (DISMISSED)
+
+**What AI Sees:**
+- 90-day recurring pattern (every Tuesday 4pm)
+- Zero customer impact in entire history
+- Auto-resolves in 22 minutes every time
+- 100% false positive rate (22/22 historical tickets)
+
+**AI Decision:** DISMISS (prevents alert fatigue, recommends threshold adjustment)
+
+---
+
+### Quick Test Commands
+
+```bash
+# Basic scenarios (3 simple tests)
+./test_all.sh
+
+# Enhanced scenarios (production-grade, multi-system correlation)
+./test_all_enhanced.sh
+
+# Individual enhanced test
+curl -X POST http://localhost:8080/api/v1/executions/webhook/incident_management/alert_ingestion/alert_webhook \
+  -H "Content-Type: application/json" \
+  -d @test_scenarios/schema_drift_enhanced.json
+```
 
 ---
 
@@ -265,9 +314,10 @@ The AI Agent uses Kestra's official AI Agent plugin:
 - id: analyze_with_ai_agent
   type: io.kestra.plugin.ai.agent.AIAgent
   provider:
-    type: io.kestra.plugin.ai.provider.GoogleGemini
-    apiKey: "{{ secret('GEMINI_API_KEY') }}"
-    modelName: gemini-2.5-flash
+    type: io.kestra.plugin.ai.provider.OpenAI
+    apiKey: "{{ secret('PERPLEXITY_API_KEY') }}"
+    baseUrl: "https://api.perplexity.ai"
+    modelName: "sonar"
 ```
 
 AI returns structured decision:
@@ -324,7 +374,7 @@ Based on AI decision, system automatically:
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | **Orchestration** | [Kestra](https://kestra.io) | Workflow engine & AI Agent framework |
-| **AI Model** | [Google Gemini 2.5 Flash](https://ai.google.dev) | Decision-making & root cause analysis |
+| **AI Model** | [Perplexity Sonar](https://www.perplexity.ai) | Decision-making & root cause analysis (unlimited free tier) |
 | **Backend** | PostgreSQL 15 | Kestra data persistence |
 | **Container Runtime** | Docker & Docker Compose | Deployment |
 | **Language** | Python 3.11 | Scripting & data processing |
@@ -345,9 +395,20 @@ Kestra provides the perfect foundation for AI-powered automation:
 
 ## 📖 Documentation
 
-- **[SETUP.md](SETUP.md)** - Detailed installation & configuration guide
-- **[walkthrough.md](.gemini/antigravity/brain/abb7722d-ce72-4a09-8f18-826a1fe444a3/walkthrough.md)** - Deployment walkthrough
+### User Guides
+- **[USER_JOURNEY.md](USER_JOURNEY.md)** - Who uses this, how they use it, before/after comparisons
+- **[PERPLEXITY_SETUP.md](PERPLEXITY_SETUP.md)** - Perplexity API setup & configuration
+- **[PROFESSIONAL_ASSESSMENT.md](PROFESSIONAL_ASSESSMENT.md)** - Gap analysis & enhancement recommendations
+
+### Technical Documentation
+- **[SUBMISSION_READY.md](SUBMISSION_READY.md)** - Readiness assessment & demo checklist
 - **[KESTRA_AI_AGENT_UPDATE.md](KESTRA_AI_AGENT_UPDATE.md)** - AI Agent implementation details
+
+### Research & Market Analysis (Docs/)
+- **Complete-Problem-Generation-Implementation.md** - Full implementation guide (40 pages)
+- **Kestra-Wakanda-Award-Analysis.md** - Deep market research (25+ sources)
+- **Master-Checklist-Ready.md** - Complete readiness checklist
+- **Source-References-Citations.md** - All citations with URLs
 
 ---
 
@@ -364,12 +425,17 @@ DataIncidentManager/
 │       ├── notify_slack.yaml      # Slack notifications
 │       └── auto_remediate.yaml    # Auto-fix workflows
 ├── test_scenarios/                 # Sample incident data
-│   ├── schema_drift.json          # HIGH severity test
-│   ├── false_positive.json        # Should dismiss
-│   └── dag_timeout.json           # CRITICAL + auto-fix
+│   ├── schema_drift.json          # Basic: HIGH severity test
+│   ├── false_positive.json        # Basic: Should dismiss
+│   ├── dag_timeout.json           # Basic: CRITICAL + auto-fix
+│   ├── schema_drift_enhanced.json         # Enhanced: Multi-system correlation
+│   ├── dag_timeout_enhanced.json          # Enhanced: Business metrics
+│   └── false_positive_enhanced.json       # Enhanced: Pattern recognition
 ├── docker-compose.yml             # Kestra deployment config
 ├── .env.example                   # Environment variable template
-├── test_all.sh                    # Automated testing script
+├── test_all.sh                    # Basic test script
+├── test_all_enhanced.sh           # Enhanced production-grade test script
+├── encode_secrets.sh              # Secret encoding utility
 ├── SETUP.md                       # Setup instructions
 ├── LICENSE                        # MIT License
 └── README.md                      # This file
@@ -431,9 +497,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **[Kestra](https://kestra.io)** - For the incredible open-source orchestration platform
-- **[Google AI](https://ai.google.dev)** - For Gemini API powering intelligent decisions
-- **Industry Research** - 25+ reports validating the data incident management problem
+- **[Kestra](https://kestra.io)** - For the incredible open-source orchestration platform and AI Agent framework
+- **[Perplexity AI](https://www.perplexity.ai)** - For Sonar API with unlimited free tier powering intelligent decisions
+- **Industry Research** - 25+ reports validating the $7-12B data incident management market
 
 ---
 
