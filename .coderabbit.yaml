@@ -1,0 +1,141 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# CodeRabbit Configuration for DataIncidentManager
+# AI-Powered Incident Management for Data Teams
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "en-US"
+early_access: false
+
+reviews:
+  # Profile determines review aggressiveness
+  # Options: "chill" (fewer comments), "assertive" (more thorough)
+  profile: "assertive"
+  
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+  tools:
+    shellcheck:
+      enabled: true
+    yamllint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    ruff:
+      enabled: true
+    actionlint:
+      enabled: true
+  path_filters:
+    - "!test_scenarios/*.json"
+    - "!test_scenarios/*_enhanced.json"
+    - "!.gitignore"
+    - "!LICENSE"
+    - "!CODE_OF_CONDUCT.md"
+  path_instructions:
+    - path: "flows/**/*.yaml"
+      instructions: |
+        Focus on Kestra-specific best practices:
+        - Proper task dependencies and flow structure
+        - Secret management using {{ secret('KEY_NAME') }}
+        - Error handling in Python/Shell scripts
+        - Output variable naming and usage
+        - Input validation
+        - Task timeout configurations
+        - Resource cleanup in tasks
+        
+        Kestra-specific concerns:
+        - Use io.kestra.plugin.* for official plugins
+        - Ensure proper outputFiles declarations
+        - Validate webhook trigger configurations
+        - Check Switch/If conditions for null safety
+    
+    - path: "**/*.sh"
+      instructions: |
+        Focus on shell script best practices:
+        - Use 'set -euo pipefail' for error handling
+        - Quote variables to prevent word splitting
+        - Check command existence before use
+        - Provide meaningful error messages
+        - Add comments for complex logic
+        - Validate required arguments
+        - Use shellcheck-compliant patterns
+    
+    # Python scripts within Kestra tasks
+    - path: "flows/**/*.yaml"
+      instructions: |
+        For Python scripts embedded in YAML:
+        - Check for proper error handling (try/except)
+        - Validate JSON parsing
+        - Check for SQL injection if querying databases  
+        - Ensure proper logging/output
+        - Type hints where applicable
+        - Input sanitization
+    
+    # Documentation files
+    - path: "*.md"
+      instructions: |
+        Focus on documentation quality:
+        - Clear, concise writing
+        - Proper markdown formatting
+        - No broken links
+        - Code examples are syntactically correct
+        - Proper heading hierarchy
+        - Include examples where helpful
+    
+    # Docker and deployment
+    - path: "docker-compose.yml"
+      instructions: |
+        Focus on Docker best practices:
+        - No hardcoded secrets
+        - Proper health checks
+        - Resource limits defined
+        - Network security
+        - Volume persistence
+        - Service dependencies
+    
+    - path: ".github/workflows/*.yml"
+      instructions: |
+        Focus on GitHub Actions best practices:
+        - Secure secret handling
+        - Proper permissions (principle of least privilege)
+        - Caching for performance
+        - Clear job names and steps
+        - Proper error handling
+        - Matrix builds where appropriate
+    
+    - path: "flows/agents/*.yaml"
+      instructions: |
+        This file contains AI Agent configurations using Kestra's AI Agent plugin.
+        
+        Key review areas:
+        - AI Agent provider configuration (OpenAI-compatible APIs)
+        - Prompt engineering quality (system + user prompts)
+        - Response format and JSON schema definitions
+        - Error handling for AI API failures
+        - Token usage optimization
+        - Context window management
+        - Response parsing robustness
+        
+        AI-specific concerns:
+        - Are prompts clear and well-structured?
+        - Is the JSON schema properly defined?
+        - Are AI responses validated before use?
+        - Is there fallback logic for API failures?
+        - Are rate limits considered?
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "global"

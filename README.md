@@ -1,13 +1,18 @@
-# DataIncidentManager
+<div align="center">
+  <img src="public/DataIncidentManager.png" alt="DataIncidentManager Banner" width="100%">
+</div>
 
-> **AI-Powered Autonomous Incident Management for Data Teams**  
 > Reduce Mean Time To Resolution (MTTR) from hours to seconds with intelligent, automated incident response.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Built with Kestra](https://img.shields.io/badge/Built%20with-Kestra-blue)](https://kestra.io)
-[![AI Agent](https://img.shields.io/badge/Powered%20by-Perplexity%20Sonar-purple)](https://www.perplexity.ai)
+<div align="center">
 
----
+<img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License: MIT" style="border-radius: 8px;">
+<img src="https://img.shields.io/badge/Built_with-Kestra-7C3AED?style=for-the-badge&logo=kubernetes&logoColor=white" alt="Built with Kestra" style="border-radius: 8px;">
+<img src="https://img.shields.io/badge/perplexity-000000?style=for-the-badge&logo=perplexity&logoColor=088F8F" alt="Perplexity" style="border-radius: 8px;">
+<img src="https://img.shields.io/badge/CodeRabbit-Enabled-FF6B35?style=for-the-badge&logo=rabbitmq&logoColor=white" alt="CodeRabbit" style="border-radius: 8px;">
+<img src="https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" style="border-radius: 8px;">
+
+</div>
 
 ## 📋 Table of Contents
 
@@ -395,20 +400,10 @@ Kestra provides the perfect foundation for AI-powered automation:
 
 ## 📖 Documentation
 
-### User Guides
-- **[USER_JOURNEY.md](USER_JOURNEY.md)** - Who uses this, how they use it, before/after comparisons
-- **[PERPLEXITY_SETUP.md](PERPLEXITY_SETUP.md)** - Perplexity API setup & configuration
-- **[PROFESSIONAL_ASSESSMENT.md](PROFESSIONAL_ASSESSMENT.md)** - Gap analysis & enhancement recommendations
-
-### Technical Documentation
-- **[SUBMISSION_READY.md](SUBMISSION_READY.md)** - Readiness assessment & demo checklist
-- **[KESTRA_AI_AGENT_UPDATE.md](KESTRA_AI_AGENT_UPDATE.md)** - AI Agent implementation details
-
-### Research & Market Analysis (Docs/)
-- **Complete-Problem-Generation-Implementation.md** - Full implementation guide (40 pages)
-- **Kestra-Wakanda-Award-Analysis.md** - Deep market research (25+ sources)
-- **Master-Checklist-Ready.md** - Complete readiness checklist
-- **Source-References-Citations.md** - All citations with URLs
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Complete contribution guide
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[SECURITY.md](SECURITY.md)** - Security policy & best practices
+- **[LICENSE](LICENSE)** - MIT License
 
 ---
 
@@ -445,26 +440,23 @@ DataIncidentManager/
 
 ## 🤝 Contributing
 
-Contributions are welcome! This project was built for the **Kestra Wakanda Data Award** hackathon and is actively maintained.
+We welcome contributions from the community! Please see our [Contributing Guide](CONTRIBUTING.md) for:
 
-### Ways to Contribute
+- Development setup instructions
+- Coding standards and best practices
+- Pull request process
+- Testing guidelines
 
-- 🔌 Add integrations with more monitoring systems (Datadog, New Relic, etc.)
-- 🧠 Improve AI prompts for better decision accuracy
-- 🔧 Create additional auto-remediation workflows
-- 📊 Build incident analytics dashboard
-- 🧪 Add more test scenarios
-- 📖 Improve documentation
+### 🤖 Code Quality
 
-### Development Setup
+We use [CodeRabbit](https://coderabbit.ai) for automated AI-powered code reviews:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Test thoroughly using `./test_all.sh`
-5. Commit changes (`git commit -m 'Add amazing feature'`)
-6. Push to branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+- ✅ Every PR automatically reviewed
+- ✅ Security vulnerability detection
+- ✅ Best practices enforcement
+- ✅ Kestra workflow validation
+
+[View Full Contributing Guide →](CONTRIBUTING.md)
 
 ---
 
@@ -497,22 +489,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **[Kestra](https://kestra.io)** - For the incredible open-source orchestration platform and AI Agent framework
-- **[Perplexity AI](https://www.perplexity.ai)** - For Sonar API with unlimited free tier powering intelligent decisions
-- **Industry Research** - 25+ reports validating the $7-12B data incident management market
+- **[Kestra](https://kestra.io)** - Incredible open-source orchestration platform and AI Agent framework
+- **[Perplexity AI](https://www.perplexity.ai)** - Sonar API powering intelligent incident analysis
+- **Open Source Community** - For inspiration and best practices
 
 ---
 
 ## 📞 Contact & Support
 
 **Author**: Suraj Kumar  
-**Project**: Built for Kestra Wakanda Data Award  
-**Repository**: [github.com/Suraj-kumar00/DataIncidentManager](https://github.com/Suraj-kumar00/DataIncidentManager)
+**Repository**: [github.com/Suraj-kumar00/DataIncidentManager](https://github.com/Suraj-kumar00/DataIncidentManager)  
+**License**: MIT
 
 ### Get Help
 
 - 🐛 [Report a Bug](https://github.com/Suraj-kumar00/DataIncidentManager/issues)
 - 💡 [Request a Feature](https://github.com/Suraj-kumar00/DataIncidentManager/issues)
+- 🔒 [Security Policy](SECURITY.md)
 - 💬 [Join Kestra Community](https://kestra.io/slack)
 
 ---
