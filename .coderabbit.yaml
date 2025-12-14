@@ -111,17 +111,7 @@ reviews:
         - Clear job names and steps
         - Proper error handling
         - Matrix builds where appropriate
-
-chat:
-  auto_reply: true
-
-knowledge_base:
-  opt_out: false
-  learnings:
-    scope: "global"
-
-reviews:
-  path_instructions:
+    
     - path: "flows/agents/*.yaml"
       instructions: |
         This file contains AI Agent configurations using Kestra's AI Agent plugin.
@@ -141,3 +131,11 @@ reviews:
         - Are AI responses validated before use?
         - Is there fallback logic for API failures?
         - Are rate limits considered?
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "global"
